@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply bg-bg-900 text-white antialiased;
+    /* Safe-area for Telegram WebApp (top notch / bottom indicator) */
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  body { font-family: var(--font-sans, system-ui, sans-serif); }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-bg-800 border border-line p-4 shadow-sm;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .pill-yes { @apply pill bg-yes/15 text-yes; }
+  .pill-no  { @apply pill bg-no/15  text-no;  }
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 font-medium transition active:scale-[0.98];
+  }
+  .btn-primary { @apply btn bg-accent-500 hover:bg-accent-600 text-white; }
+  .btn-ghost   { @apply btn bg-bg-700 hover:bg-bg-800 text-white border border-line; }
+}
