@@ -1,43 +1,18 @@
-# Polybet — Polymarket on Telegram
+# Polybet Mini App
 
-A Telegram Mini App + responsive web frontend for trading on [Polymarket](https://polymarket.com) prediction markets.
+Telegram Mini App + Web frontend for trading on [Polymarket](https://polymarket.com) prediction markets.
 
-## What this is
+- **Stack:** Next.js 14 + TanStack Query + Tailwind + viem + @telegram-apps/sdk
+- **Backend:** [polymarket-trading-bot](https://github.com/shekelstrong/polymarket-trading-bot) (FastAPI on VPS)
+- **License:** MIT
 
-- **Web (Vercel-ready)**: Next.js 14 app that works both as a standalone webapp and as the Mini App that opens from inside Telegram.
-- **Telegram Mini App**: same Next.js app, but with the Telegram WebApp SDK bootstrap so it renders inside the in-app browser, uses the user's Telegram theme, and supports the `MainButton` + `HapticFeedback`.
-- **Backend (FastAPI on your VPS)**: this repo is the *frontend*. The trading/sign layer lives in a separate Python service that wraps `py-clob-client` and `py-order-utils`. See `../polymarket-trading-bot` (a single bot) or fork it for a multi-user backend.
+## Features
 
-## Architecture
-
-```
-┌──────────────────────┐    HTTPS    ┌────────────────────────┐
-│  Telegram client     │  WebApp     │  Vercel (this repo)    │
-│  (iOS / Android)     │ ──────────► │  Next.js 14 SPA        │
-└──────────────────────┘             └──────────┬─────────────┘
-┌──────────────────────┐                       │ /api or REST
-│  Web (any browser)   │ ─────────────────────►│
-└──────────────────────┘                       ▼
-                                    ┌────────────────────────┐
-                                    │  FastAPI on your VPS   │
-                                    │  py-clob-client        │
-                                    │  Polygon mainnet (137) │
-                                    └──────────┬─────────────┘
-                                               ▼
-                                    ┌────────────────────────┐
-                                    │  Polymarket CLOB       │
-                                    │  clob.polymarket.com   │
-                                    └────────────────────────┘
-```
-
-## Stack
-
-- **Next.js 14** (App Router, server actions disabled, default SSR)
-- **React 18**, **TypeScript 5.5**
-- **TanStack Query** for data fetching
-- **Tailwind CSS** for the dark/crypto look
-- **viem + wagmi** (planned) for client-side wallet auth (MetaMask, WalletConnect)
-- **Telegram WebApp SDK** for in-Telegram UX
+- Trending markets feed (live, refetches every 30s)
+- Single-market view with live order book (refetches every 5s)
+- BUY/SELL form with USDC amount input
+- Telegram theme + HapticFeedback + MainButton (when inside Telegram)
+- Works in any browser as a normal webapp
 
 ## Run locally
 
@@ -48,44 +23,47 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open <http://localhost:3000>. To test the Telegram integration, use the [@BotFather Mini App flow](https://core.telegram.org/bots/webapps) with `ngrok` or a public URL.
+Open http://localhost:3000.
 
-## Deployment (Vercel)
+## Deploy to Vercel
 
-1. Push this repo to GitHub.
-2. Import the repo in Vercel.
-3. Set `NEXT_PUBLIC_API_URL` to your backend URL.
-4. Vercel auto-builds and deploys on every push to `main`.
+1. Push to GitHub (already done).
+2. Open <https://vercel.com/new>.
+3. Import `shekelstrong/polymarket-miniapp`.
+4. Add env: `NEXT_PUBLIC_API_URL=http://108.165.164.85:8080` (or your domain).
+5. **Deploy** → done in ~60s.
+
+Vercel auto-redeploys on every push to `main`.
 
 ## Telegram Mini App setup
 
-1. In [@BotFather](https://t.me/BotFather), run `/setmenubutton` and set the URL to your Vercel deployment (or a custom domain).
-2. Open the bot, hit the menu button — the Mini App opens full-screen inside Telegram.
-3. `Telegram.WebApp.initData` is auto-forwarded to the backend `/auth/telegram` endpoint to verify the user.
+1. Open [@BotFather](https://t.me/BotFather) → `/newbot` → create bot.
+2. `/setmenubutton` → select your bot → button text `📊 Trade` → URL: Vercel URL.
+3. Open your bot, hit Menu → Mini App opens.
+
+## Telegram auth flow
+
+Mini App calls `Telegram.WebApp.initData` and forwards to backend `/auth/telegram`. Backend verifies HMAC-SHA256 with bot token. User's `telegram_id` becomes tenant ID.
 
 ## Project layout
 
 ```
 src/
   app/
-    layout.tsx         # Telegram theme + providers
-    page.tsx           # Trending markets feed
-    m/[slug]/page.tsx  # Single-market trade view
-    providers.tsx      # TanStack Query
-    globals.css        # Tailwind + design tokens
+    layout.tsx          # Telegram theme + providers
+    page.tsx            # Trending markets feed
+    m/[slug]/page.tsx   # Single market + order book + trade form
+    providers.tsx       # TanStack Query
+    globals.css         # Tailwind + design tokens
   components/
     TopBar.tsx
     MarketCard.tsx
     OrderBookPanel.tsx
   lib/
-    api.ts             # backend client
-    types.ts           # shared with FastAPI
-    telegram.ts        # WebApp bootstrap + initData verify
+    api.ts              # Backend client
+    types.ts            # Schemas shared with FastAPI
+    telegram.ts         # WebApp bootstrap + initData verify
 ```
-
-## Status
-
-Skeleton only — UI is wired against the backend contract. The FastAPI backend (next) implements `/markets/trending`, `/markets/orderbook/{tokenId}`, `/trades`, `/auth/telegram`.
 
 ## License
 
